@@ -1,0 +1,46 @@
+version: '3.1'
+
+services:
+  db:
+    image: mysql
+    restart: always
+    volumes:
+      - my-datavolume:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - my-datavolume-redis:/var/lib/redis/data
+  api:
+    build: .
+    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails s -p 3000 -b '0.0.0.0'"
+    volumes:
+      - .:/api_sample
+    ports:
+      - "3000:3000"
+    environment:
+      DB_DATABASE: api_sample_development
+      DB_USER: root
+      DB_PASSWORD: password
+      DB_HOST: db
+      DB_PORT: 3306
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+      - mongodb
+  mongodb:
+    image: mongodb/mongodb-community-server:6.0-ubi8
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=user
+      - MONGO_INITDB_ROOT_PASSWORD=pass
+    volumes:
+      - my-mongo-data:/data/db
+volumes:
+  my-datavolume:
+  my-datavolume-redis:
+  my-mongo-data:
