@@ -21,7 +21,8 @@ class GeolocationForm
 
     return false if geolocation_data.blank?
 
-    @geolocation = Geolocation.new(ip: geolocation_data['ip'], data: geolocation_data)
+    @geolocation = Geolocation.find_or_initialize_by(ip: geolocation_data['ip'])
+    @geolocation.data = geolocation_data
     @geolocation.save
   end
 

@@ -43,6 +43,8 @@ describe GeolocationForm, type: :model do # rubocop:disable Metrics/BlockLength
 
   describe '#save' do
     context 'when valid' do
+      let(:valid_ip) { '111.201.250.155' }
+
       it 'saves the geolocation data to the database' do
         form = GeolocationForm.new({ ip_address: valid_ip }, provider)
         expect do
