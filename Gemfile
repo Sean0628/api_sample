@@ -43,6 +43,7 @@ group :development, :test do
 end
 
 group :test do
+  gem 'database_cleaner-mongoid'
   gem 'mongoid-rspec', '~> 4.0'
   gem 'rspec-rails', '~> 5.0'
   gem 'webmock', '~> 3.0'
