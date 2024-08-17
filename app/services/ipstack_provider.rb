@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# This class is a provider for fetching geolocation data from the IPStack API.
 class IpstackProvider < GeolocationProvider
   BASE_URL = 'http://api.ipstack.com/'
 

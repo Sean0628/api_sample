@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# This class is responsible for handling the form object for creating a new geolocation record.
 class GeolocationForm
   include ActiveModel::Model
   include ActiveModel::Validations
