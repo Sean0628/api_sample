@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class GeolocationsController < ApplicationController # :nodoc:
+  rescue_from ActionController::ParameterMissing, with: :handle_parameter_missing
+
   def create
     form = GeolocationForm.new(create_params)
 
@@ -15,7 +17,9 @@ class GeolocationsController < ApplicationController # :nodoc:
 
   def create_params
     params.fetch(:data, {}).permit(attributes: %i[ip_address url])
-  rescue ActionController::ParameterMissing => e
-    render json: { error: e.message }, status: :bad_request
+  end
+
+  def handle_parameter_missing(exception)
+    render json: { error: exception.message }, status: :bad_request
   end
 end
