@@ -3,10 +3,10 @@ development:
     default:
       database: api_sample_development
       hosts:
-        - localhost:27017
+        - mongodb:27017
       options:
         user: 'user'
-        password: 'password'
+        password: 'pass'
         auth_source: 'admin'
         read:
           mode: :primary
