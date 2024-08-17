@@ -29,7 +29,10 @@ describe GeolocationsController, type: :controller do # rubocop:disable Metrics/
         allow(geolocation_form).to receive(:geolocation).and_return(geolocation_data)
       end
 
-      it 'creates a new geolocation and returns the geolocation data with status :created' do
+      it 'creates or updates a geolocation and returns the geolocation data with status :created' do
+        expect(GeolocationForm).to receive(:new).with(ActionController::Parameters.new(valid_attributes).permit!)
+        expect(geolocation_form).to receive(:save).and_return(true)
+
         post :create, params: { data: { attributes: valid_attributes } }
 
         expect(response).to have_http_status(:created)
@@ -44,7 +47,10 @@ describe GeolocationsController, type: :controller do # rubocop:disable Metrics/
           .and_return(['Provide at least one of ip_address or url'])
       end
 
-      it 'does not create a geolocation and returns errors with status :unprocessable_entity' do
+      it 'does not create or update a geolocation and returns errors with status :unprocessable_entity' do
+        expect(GeolocationForm).to receive(:new).with(ActionController::Parameters.new(invalid_attributes).permit!)
+        expect(geolocation_form).to receive(:save).and_return(false)
+
         post :create, params: { data: { attributes: invalid_attributes } }
 
         expect(response).to have_http_status(:unprocessable_entity)
@@ -53,7 +59,7 @@ describe GeolocationsController, type: :controller do # rubocop:disable Metrics/
     end
 
     context 'with missing parameters' do
-      it 'returns an error with status :unprocessable_entity' do
+      it 'raises a ParameterMissing error' do
         expect do
           post :create, params: { data: {} }
         end.to raise_error(ActionController::ParameterMissing)
