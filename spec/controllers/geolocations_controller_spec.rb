@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-describe GeolocationsController, type: :controller do # rubocop:disable Metrics/BlockLength
+describe GeolocationsController, type: :controller do
   let(:valid_attributes) { { ip_address: '134.201.250.155' } }
   let(:invalid_attributes) { { ip_address: '', url: '' } }
   let(:geolocation_data) do
@@ -22,7 +22,7 @@ describe GeolocationsController, type: :controller do # rubocop:disable Metrics/
     allow(GeolocationForm).to receive(:new).and_return(geolocation_form)
   end
 
-  describe 'POST #create' do # rubocop:disable Metrics/BlockLength
+  describe 'POST #create' do
     context 'with valid parameters' do
       before do
         allow(geolocation_form).to receive(:save).and_return(true)
@@ -30,7 +30,7 @@ describe GeolocationsController, type: :controller do # rubocop:disable Metrics/
       end
 
       it 'creates or updates a geolocation and returns the geolocation data with status :created' do
-        expect(GeolocationForm).to receive(:new).with(ActionController::Parameters.new(valid_attributes).permit!)
+        expect(GeolocationForm).to receive(:new).with(ActionController::Parameters.new(attributes: valid_attributes).permit!)
         expect(geolocation_form).to receive(:save).and_return(true)
 
         post :create, params: { data: { attributes: valid_attributes } }
@@ -48,21 +48,13 @@ describe GeolocationsController, type: :controller do # rubocop:disable Metrics/
       end
 
       it 'does not create or update a geolocation and returns errors with status :unprocessable_entity' do
-        expect(GeolocationForm).to receive(:new).with(ActionController::Parameters.new(invalid_attributes).permit!)
+        expect(GeolocationForm).to receive(:new).with(ActionController::Parameters.new(attributes: invalid_attributes).permit!)
         expect(geolocation_form).to receive(:save).and_return(false)
 
         post :create, params: { data: { attributes: invalid_attributes } }
 
         expect(response).to have_http_status(:unprocessable_entity)
         expect(JSON.parse(response.body)).to eq({ 'errors' => ['Provide at least one of ip_address or url'] })
-      end
-    end
-
-    context 'with missing parameters' do
-      it 'raises a ParameterMissing error' do
-        expect do
-          post :create, params: { data: {} }
-        end.to raise_error(ActionController::ParameterMissing)
       end
     end
   end

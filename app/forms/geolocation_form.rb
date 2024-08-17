@@ -9,8 +9,9 @@ class GeolocationForm
   validate :either_ip_or_url_present
 
   def initialize(params = {}, provider = IpstackProvider.new)
-    @ip_address = params[:ip_address]
-    @url = params[:url]
+    attributes = params[:attributes] || {}
+    @ip_address = attributes[:ip_address]
+    @url = attributes[:url]
     @provider = provider
   end
 

@@ -14,6 +14,8 @@ class GeolocationsController < ApplicationController # :nodoc:
   private
 
   def create_params
-    params.require(:data).require(:attributes).permit(:ip_address, :url)
+    params.fetch(:data, {}).permit(attributes: %i[ip_address url])
+  rescue ActionController::ParameterMissing => e
+    render json: { error: e.message }, status: :bad_request
   end
 end

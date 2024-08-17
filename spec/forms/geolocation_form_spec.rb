@@ -22,41 +22,52 @@ describe GeolocationForm, type: :model do # rubocop:disable Metrics/BlockLength
 
   describe 'validations' do
     it 'is valid with either ip_address or url' do
-      form = GeolocationForm.new({ ip_address: valid_ip }, provider)
+      form = GeolocationForm.new({ attributes: { ip_address: valid_ip } }, provider)
       expect(form).to be_valid
 
-      form = GeolocationForm.new({ url: 'http://example.com' }, provider)
+      form = GeolocationForm.new({ attributes: { url: 'http://example.com' } }, provider)
       expect(form).to be_valid
     end
 
     it 'is valid with both ip_address and url' do
-      form = GeolocationForm.new({ ip_address: valid_ip, url: 'http://example.com' }, provider)
+      form = GeolocationForm.new({ attributes: { ip_address: valid_ip, url: 'http://example.com' } }, provider)
       expect(form).to be_valid
     end
 
     it 'is invalid with neither ip_address nor url' do
-      form = GeolocationForm.new({}, provider)
+      form = GeolocationForm.new({ attributes: {} }, provider)
       form.valid?
       expect(form.errors[:base]).to include('Provide at least one of ip_address or url')
     end
   end
 
-  describe '#save' do
+  describe '#save' do # rubocop:disable Metrics/BlockLength
     context 'when valid' do
-      let(:valid_ip) { '111.201.250.155' }
+      context 'when geolocation data does not exist in the database' do
+        it 'saves the geolocation data to the database' do
+          form = GeolocationForm.new({ attributes: { ip_address: valid_ip } }, provider)
+          expect do
+            form.save
+          end.to change(Geolocation, :count).by(1)
+        end
+      end
 
-      it 'saves the geolocation data to the database' do
-        form = GeolocationForm.new({ ip_address: valid_ip }, provider)
-        expect do
-          form.save
-        end.to change(Geolocation, :count).by(1)
+      context 'when geolocation data already exists in the database' do
+        it 'updates existing geolocation data in the database' do
+          Geolocation.create(ip: valid_ip, data: { 'ip' => valid_ip })
+          form = GeolocationForm.new({ attributes: { ip_address: valid_ip } }, provider)
+          expect do
+            form.save
+          end.not_to change(Geolocation, :count)
+          expect(Geolocation.find_by(ip: valid_ip).data).to eq(geolocation_data)
+        end
       end
     end
 
     context 'when invalid' do
       it 'does not save geolocation data' do
         expect do
-          form = GeolocationForm.new({}, provider) # No ip_address or url
+          form = GeolocationForm.new({ attributes: {} }, provider) # No ip_address or url
           form.save
         end.not_to change(Geolocation, :count)
       end
@@ -67,7 +78,7 @@ describe GeolocationForm, type: :model do # rubocop:disable Metrics/BlockLength
 
       it 'does not save geolocation data' do
         expect do
-          form = GeolocationForm.new({ ip_address: valid_ip }, provider)
+          form = GeolocationForm.new({ attributes: { ip_address: valid_ip } }, provider)
           form.save
         end.not_to change(Geolocation, :count)
       end
