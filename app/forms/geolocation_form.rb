@@ -7,6 +7,7 @@ class GeolocationForm
   attr_accessor :ip_address, :url, :provider, :geolocation
 
   validate :either_ip_or_url_present
+  validate :valid_url_format, if: -> { ip_address.blank? && url.present? }
 
   def initialize(params = {}, provider = IpstackProvider.new)
     attributes = params[:attributes] || {}
@@ -33,5 +34,12 @@ class GeolocationForm
     return unless ip_address.blank? && url.blank?
 
     errors.add(:base, 'Provide at least one of ip_address or url')
+  end
+
+  def valid_url_format
+    uri = URI.parse(url)
+    errors.add(:url, 'is not a valid HTTP/HTTPS URL') unless uri.is_a?(URI::HTTP) || uri.is_a?(URI::HTTPS)
+  rescue URI::InvalidURIError
+    errors.add(:url, 'is not a valid URL')
   end
 end

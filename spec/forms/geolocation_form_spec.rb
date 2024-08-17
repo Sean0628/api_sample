@@ -39,6 +39,16 @@ describe GeolocationForm, type: :model do # rubocop:disable Metrics/BlockLength
       form.valid?
       expect(form.errors[:base]).to include('Provide at least one of ip_address or url')
     end
+
+    it 'is invalid with an improperly formatted URL' do
+      form = GeolocationForm.new({ attributes: { url: 'invalid-url' } }, provider)
+      form.valid?
+      expect(form.errors[:url]).to include('is not a valid HTTP/HTTPS URL')
+
+      form = GeolocationForm.new({ attributes: { url: 'ftp://example.com' } }, provider)
+      form.valid?
+      expect(form.errors[:url]).to include('is not a valid HTTP/HTTPS URL')
+    end
   end
 
   describe '#save' do # rubocop:disable Metrics/BlockLength
@@ -81,6 +91,16 @@ describe GeolocationForm, type: :model do # rubocop:disable Metrics/BlockLength
           form = GeolocationForm.new({ attributes: { ip_address: valid_ip } }, provider)
           form.save
         end.not_to change(Geolocation, :count)
+      end
+    end
+
+    context 'when the URL is not HTTP or HTTPS' do
+      it 'does not save geolocation data' do
+        form = GeolocationForm.new({ attributes: { url: 'ftp://example.com' } }, provider)
+        expect do
+          form.save
+        end.not_to change(Geolocation, :count)
+        expect(form.errors[:url]).to include('is not a valid HTTP/HTTPS URL')
       end
     end
   end
