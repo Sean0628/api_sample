@@ -15,11 +15,13 @@ describe GeolocationsController, type: :controller do
       'longitude' => -118.2405
     }
   end
-
+  let(:api_key) { SecureRandom.hex(20) }
+  let!(:active_key) { ApiKey.create!(key: api_key, expired_at: 1.month.from_now, status: :active) }
   let(:geolocation_form) { instance_double('GeolocationForm') }
 
   before do
     allow(GeolocationForm).to receive(:new).and_return(geolocation_form)
+    request.headers['X-Api-Key'] = active_key.key
   end
 
   describe 'POST #create' do
