@@ -27,6 +27,7 @@ describe GeolocationsController, type: :controller do
       before do
         allow(geolocation_form).to receive(:save).and_return(true)
         allow(geolocation_form).to receive(:geolocation).and_return(geolocation_data)
+        allow(geolocation_form).to receive(:resolved_ip_address).and_return(valid_attributes[:ip_address])
       end
 
       it 'creates or updates a geolocation and returns the geolocation data with status :created' do
