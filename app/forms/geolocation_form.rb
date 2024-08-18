@@ -12,21 +12,24 @@ class GeolocationForm
 
   def initialize(params = {}, provider = IpstackProvider.new)
     attributes = params[:attributes] || {}
-    @ip_address = attributes[:ip_address]
     @url = attributes[:url]
+    @ip_address = attributes[:ip_address]
     @provider = provider
   end
 
   def save
     return false unless valid?
 
-    geolocation_data = provider.fetch(ip_address:, url:)
-
+    geolocation_data = provider.fetch(ip_address: resolved_ip_address)
     return false if geolocation_data.blank?
 
     @geolocation = Geolocation.find_or_initialize_by(ip: geolocation_data['ip'])
     @geolocation.data = geolocation_data
     @geolocation.save
+  end
+
+  def resolved_ip_address
+    ip_address || resolve_ip_from_url(url)
   end
 
   private
@@ -42,5 +45,17 @@ class GeolocationForm
     errors.add(:url, 'is not a valid HTTP/HTTPS URL') unless uri.is_a?(URI::HTTP) || uri.is_a?(URI::HTTPS)
   rescue URI::InvalidURIError
     errors.add(:url, 'is not a valid URL')
+  end
+
+  def resolve_ip_from_url(url)
+    return nil if url.blank?
+
+    uri = URI.parse(url)
+    hostname = uri.host
+    return nil if hostname.blank?
+
+    Resolv.getaddress(hostname)
+  rescue URI::InvalidURIError, Resolv::ResolvError
+    nil
   end
 end

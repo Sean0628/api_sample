@@ -5,8 +5,6 @@ require 'rails_helper'
 describe IpstackProvider do # rubocop:disable Metrics/BlockLength
   let(:ipstack_key) { 'test_api_key' }
   let(:ip_address) { '134.201.250.155' }
-  let(:url) { 'http://example.com' }
-  let(:resolved_ip) { '93.184.216.34' } # Example resolved IP address for the URL
   let(:geolocation_data) do
     {
       'ip' => ip_address,
@@ -29,7 +27,6 @@ describe IpstackProvider do # rubocop:disable Metrics/BlockLength
   before do
     allow(ENV).to receive(:[]).and_call_original
     allow(ENV).to receive(:[]).with('IPSTACK_API_KEY').and_return(ipstack_key)
-    allow(provider).to receive(:resolve_ip_from_url).with(url).and_return(resolved_ip)
   end
 
   describe '#fetch' do
@@ -44,14 +41,11 @@ describe IpstackProvider do # rubocop:disable Metrics/BlockLength
       end
     end
 
-    context 'when provided with a URL' do
-      it 'resolves the IP from the URL and fetches geolocation data' do
-        stub_request(:get, "http://api.ipstack.com/#{resolved_ip}?access_key=#{ipstack_key}")
-          .to_return(status: 200, body: geolocation_data.merge('ip' => resolved_ip).to_json)
+    context 'when the IP address is blank' do
+      it 'returns nil' do
+        result = provider.fetch(ip_address: nil)
 
-        result = provider.fetch(url:)
-
-        expect(result['ip']).to eq(resolved_ip)
+        expect(result).to be_nil
       end
     end
 

@@ -104,4 +104,46 @@ describe GeolocationForm, type: :model do # rubocop:disable Metrics/BlockLength
       end
     end
   end
+
+  describe '#resolved_ip_address' do # rubocop:disable Metrics/BlockLength
+    let(:form) { GeolocationForm.new({ attributes: { ip_address: ip_address, url: url } }, provider) }
+
+    context 'when ip_address is provided' do
+      let(:ip_address) { valid_ip }
+      let(:url) { nil }
+
+      it 'returns the ip_address' do
+        expect(form.resolved_ip_address).to eq(valid_ip)
+      end
+    end
+
+    context 'when ip_address is not provided but url is provided' do
+      let(:ip_address) { nil }
+      let(:url) { 'http://example.com' }
+      let(:resolved_ip) { valid_ip }
+
+      it 'resolves and returns the IP address from the URL' do
+        allow(Resolv).to receive(:getaddress).with('example.com').and_return(resolved_ip)
+        expect(form.resolved_ip_address).to eq(resolved_ip)
+      end
+    end
+
+    context 'when neither ip_address nor url is provided' do
+      let(:ip_address) { nil }
+      let(:url) { nil }
+
+      it 'returns nil' do
+        expect(form.resolved_ip_address).to be_nil
+      end
+    end
+
+    context 'when url is invalid' do
+      let(:ip_address) { nil }
+      let(:url) { 'invalid-url' }
+
+      it 'returns nil' do
+        expect(form.resolved_ip_address).to be_nil
+      end
+    end
+  end
 end
