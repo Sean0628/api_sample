@@ -4,8 +4,8 @@
 class IpstackProvider < GeolocationProvider
   BASE_URL = 'http://api.ipstack.com/'
 
-  def fetch(ip_address: nil, url: nil)
-    ip = ip_address || resolve_ip_from_url(url)
+  def fetch(ip_address: nil)
+    ip = ip_address
     return nil if ip.blank?
 
     ipstack_key = ENV['IPSTACK_API_KEY']
