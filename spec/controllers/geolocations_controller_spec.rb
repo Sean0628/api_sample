@@ -58,4 +58,77 @@ describe GeolocationsController, type: :controller do
       end
     end
   end
+
+  describe 'DELETE #destroy' do
+    let(:valid_ip) { '134.201.250.155' }
+    let(:resolved_ip) { '93.184.216.34' }
+    before { Geolocation.create(ip: valid_ip, data: { 'ip' => valid_ip }) }
+
+    context 'with a valid IP address' do
+      before do
+        allow(geolocation_form).to receive(:valid?).and_return(true)
+        allow(geolocation_form).to receive(:resolved_ip_address).and_return(valid_ip)
+      end
+
+      it 'deletes the geolocation and returns status :no_content' do
+        expect do
+          delete :destroy, params: { ip_address: valid_ip }
+        end.to change(Geolocation, :count).by(-1)
+
+        expect(response).to have_http_status(:no_content)
+      end
+    end
+
+    context 'with a valid URL' do
+      before do
+        allow(geolocation_form).to receive(:valid?).and_return(true)
+        allow(geolocation_form).to receive(:resolved_ip_address).and_return(valid_ip)
+      end
+
+      it 'resolves the IP address from the URL, deletes the geolocation, and returns status :no_content' do
+        Geolocation.create(ip: resolved_ip, data: { 'ip' => resolved_ip })
+
+        expect do
+          delete :destroy, params: { url: 'http://example.com' }
+        end.to change(Geolocation, :count).by(-1)
+
+        expect(response).to have_http_status(:no_content)
+      end
+    end
+
+    context 'when the geolocation does not exist' do
+      let(:non_existent_ip) { '120.201.250.155' }
+      before do
+        allow(geolocation_form).to receive(:valid?).and_return(true)
+        allow(geolocation_form).to receive(:resolved_ip_address).and_return(non_existent_ip)
+      end
+
+      it 'returns status :not_found' do
+        expect do
+          delete :destroy, params: { ip_address: non_existent_ip }
+        end.not_to change(Geolocation, :count)
+
+        expect(response).to have_http_status(:not_found)
+      end
+    end
+
+    context 'with invalid parameters' do
+      before do
+        allow(geolocation_form).to receive(:valid?).and_return(false)
+        allow(geolocation_form).to receive_message_chain(:errors, :full_messages)
+      end
+
+      it 'returns status :bad_request when both ip_address and url are missing' do
+        delete :destroy, params: {}
+
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+
+      it 'returns status :bad_request when the URL is invalid' do
+        delete :destroy, params: { url: 'invalid-url' }
+
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+    end
+  end
 end
