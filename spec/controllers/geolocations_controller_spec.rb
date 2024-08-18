@@ -131,4 +131,69 @@ describe GeolocationsController, type: :controller do
       end
     end
   end
+
+  describe 'GET #provide' do
+    let(:valid_ip) { '134.201.250.155' }
+    let(:geolocation_form) do
+      instance_double('GeolocationForm', valid?: true, resolved_ip_address: valid_ip, geolocation: geolocation_data)
+    end
+
+    before do
+      allow(GeolocationForm).to receive(:new).and_return(geolocation_form)
+    end
+
+    context 'when the geolocation exists in the database' do
+      before do
+        Geolocation.create(ip: valid_ip, data: geolocation_data)
+      end
+
+      it 'returns the existing geolocation with status :ok' do
+        get :provide, params: { data: { attributes: { ip_address: valid_ip } } }
+
+        expect(response).to have_http_status(:ok)
+        expect(JSON.parse(response.body)['data']).to eq(geolocation_data.stringify_keys)
+      end
+    end
+
+    context 'when the geolocation does not exist in the database' do
+      before do
+        allow(geolocation_form).to receive(:save).and_return(true)
+      end
+
+      it 'fetches, saves, and returns the new geolocation with status :created' do
+        get :provide, params: { data: { attributes: { ip_address: valid_ip } } }
+
+        expect(response).to have_http_status(:created)
+        expect(JSON.parse(response.body)).to eq(geolocation_data.stringify_keys)
+      end
+    end
+
+    context 'when form validation fails' do
+      before do
+        allow(geolocation_form).to receive(:valid?).and_return(false)
+        allow(geolocation_form).to receive_message_chain(:errors, :full_messages).and_return(['Validation error'])
+      end
+
+      it 'returns status :unprocessable_entity with error messages' do
+        get :provide, params: { data: { attributes: { ip_address: '' } } }
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(JSON.parse(response.body)).to eq({ 'errors' => ['Validation error'] })
+      end
+    end
+
+    context 'when the geolocation does not exist and cannot be fetched' do
+      before do
+        allow(geolocation_form).to receive(:save).and_return(false)
+        allow(geolocation_form).to receive_message_chain(:errors, :full_messages).and_return(['Fetch error'])
+      end
+
+      it 'returns status :unprocessable_entity with error messages' do
+        get :provide, params: { data: { attributes: { ip_address: valid_ip } } }
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(JSON.parse(response.body)).to eq({ 'errors' => ['Fetch error'] })
+      end
+    end
+  end
 end
