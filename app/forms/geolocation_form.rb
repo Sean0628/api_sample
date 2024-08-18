@@ -20,12 +20,16 @@ class GeolocationForm
   def save
     return false unless valid?
 
-    geolocation_data = provider.fetch(ip_address: ip_address || resolve_ip_from_url(url))
+    geolocation_data = provider.fetch(ip_address: resolved_ip_address)
     return false if geolocation_data.blank?
 
     @geolocation = Geolocation.find_or_initialize_by(ip: geolocation_data['ip'])
     @geolocation.data = geolocation_data
     @geolocation.save
+  end
+
+  def resolved_ip_address
+    ip_address || resolve_ip_from_url(url)
   end
 
   private
