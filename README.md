@@ -10,14 +10,32 @@
     ```sh
     cd api_sample
     ```
+2. **Copy the `.env` File**:
 
-2. **Start the Services**:
+    Copy the provided `.env` example file to your project root:
+
+    ```sh
+    cp .env.sample .env
+    ```
+
+3. **Add the IPStack API Key**:
+
+    - Open `.env` in your favorite text editor.
+    - Add your IPStack API key to the `IPSTACK_API_KEY` variable:
+
+    ```plaintext
+    IPSTACK_API_KEY=your_api_key_here
+    ```
+
+    You can find your API key on the [IPStack Dashboard](https://ipstack.com/dashboard).
+
+4. **Start the Services**:
 
     ```sh
     docker-compose up -d
     ```
 
-3. **Database Setup**:
+5. **Database Setup**:
 
     Create the database:
 
